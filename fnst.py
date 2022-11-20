@@ -210,7 +210,7 @@ class Stylizer():
 
     def __load_net(self, model_path):
         with torch.no_grad():
-            self.net = TransformerMobileNet()
+            self.net = TransformerMobileNet().to(device)
             state_dict = torch.load(model_path)
             self.net.load_state_dict(state_dict)
 
