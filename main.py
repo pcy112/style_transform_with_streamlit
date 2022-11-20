@@ -72,6 +72,10 @@ else:
     st.image(img, caption='Uploaded Image.', use_column_width=True)
     if path_style != None:
         st.image(path_style, caption='Style Image', use_column_width=True)
+        img_size = st.select_slider(
+                    'Select a image size',
+                    options=[8, 16, 32, 64, 128, 256, 512])
+        st.write('이미지 사이즈가 크면 결과는 좋아지지만 크기가 너무 크면 결과가 나오지 않을 수 있습니다.')
     else:
         img2 = None
         uploaded_st_file = st.file_uploader(
@@ -118,7 +122,6 @@ if uploaded_file is not None and any(extension in uploaded_file.name for extensi
                 #with st.spinner("학습 중..."):
                 model_path = style.train(style_path, img_size, epoch)
             stylized = style.stylizing(model_path, root_output, input_path)
-            print(img_size, epoch)
             # displaying the output image
             st.write("### Output Image")
             # image = Image.open(output_image)
