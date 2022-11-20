@@ -1,5 +1,5 @@
-numpy
-pandas
 pytorch
 torchvision
-streamlit
+pytorch-cuda=11.6
+numpy
+pandas
