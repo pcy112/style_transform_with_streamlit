@@ -131,3 +131,4 @@ if uploaded_file is not None and any(extension in uploaded_file.name for extensi
         except Exception as e:
             
             st.error("이미지가 너무 크거나 예기치 못한 문제가 발생하였습니다.\n이미지 크기를 줄이고 다시 시도해 주세요")
+            st.write(e)
