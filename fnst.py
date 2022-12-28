@@ -12,22 +12,36 @@ import argparse
 
 from utils import load_im, save_im
 from utils import gram_matrix, norm_batch, regularization_loss
+import torchvision.models as mdl
 from fnst_modules import TransformerMobileNet
 from feature_ext import FeatureExtractor
 
-TRAIN_PATH = '101_ObjectCategories'
-CHECK_IMAGE = 'images/dancing.jpg'
+EPOCHS = 3
 LOSS_NETWORK = models.vgg16
+#LOSS_NETWORK = mdl.mobilenet_v2
+#model = mdl.mobilenet_v2(weights=mdl.MobileNet_V2_Weights.DEFAULT).features[:15]
+TRAIN_PATH = '101_ObjectCategories'
+STYLE_IMAGE = 'images/mondrian.jpg'
+CHECK_IMAGE = 'images/dancing.jpg'
+IMAGE_SIZE = 128
 LAYER_IDXS = [3, 8, 15, 22]
 BATCH_SIZE = 4
 CONTENT_WEIGHT = 1
 STYLE_WEIGHT = 3 * 1e5
 REG_WEIGHT = 3 * 1e-5
 STYLE_PROPORTIONS = [.35, .35, .15, .15]
+# * downsamples: 0, 2, 4, 7, 14
+# * content: 4
+# * style: 1, 2, 4, 7, 14
 CONTENT_INDEX = 1
 LOG_INTERVAL = 1000
 CHECKPOINT = 4000
 
+OUTPUT_PATH = 'images/sample'
+INPUT_IMAGE = 'C:/Users/user/Desktop/정자2.jpg'
+#INPUT_IMAGE = 'images/dancing/pwr.jpg'
+#MODEL_PATH = 'models/gogh.pth'
+MODEL_PATH = 'tmp/models/epoch2_batch2286.pth'
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
@@ -160,7 +174,6 @@ class Learner():
                     self.save_tfm_net(e+1, i+1)
 
             model_path = self.save_tfm_net(e+1, i+1)
-            
         return model_path
 
     def intermediate_res(self, c_loss, s_loss, r_loss, n):
@@ -213,6 +226,10 @@ class Stylizer():
         save_im(_path, out[0])
         return out[0]
 
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-train', action='store_true')
+
 def train_learner(style_image, im_size, epochs):
     loss_network = LOSS_NETWORK(True)
     loss_network = nn.Sequential(*list(loss_network.features)[:23]) # ToDo
@@ -227,23 +244,24 @@ def train_learner(style_image, im_size, epochs):
     
     return lrn.train(epochs)
 
+
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--style_path', dest='style_path', type=str, default='images/candy.jpg')
-    parser.add_argument('--img_size', dest='img_size', type=int, default=128)
-    parser.add_argument('--model_path', dest='model_path', type=str, default='models/candy.jpg')
-    parser.add_argument('--input_path', dest='input_path', type=str, default='tmp/input.jpg')
-    parser.add_argument('--output_path', dest='output_path', type=str, default='imges/sample')
-    parser.add_argument('--epochs', dest='epochs', type=int, default=3)
-    parser.add_argument('-train', action='store_true')
-    
     args = parser.parse_args()
-    
     if args.train:
-        train_learner(args.style_path, args.img_size, args.epochs)
+        loss_network = LOSS_NETWORK(True)
+        loss_network = nn.Sequential(*list(loss_network.features)[:23]) # ToDo
+        lrn = Learner(loss_network=loss_network,
+                      train_path=TRAIN_PATH, style_image=STYLE_IMAGE,
+                      check_image=CHECK_IMAGE, im_size=IMAGE_SIZE,
+                      layer_idxs=LAYER_IDXS, batch_size=BATCH_SIZE,
+                      c_weight=CONTENT_WEIGHT, s_weight=STYLE_WEIGHT,
+                      r_weight=REG_WEIGHT, style_proportions=STYLE_PROPORTIONS,
+                      content_index=CONTENT_INDEX, log_interval=LOG_INTERVAL,
+                      checkpoint=CHECKPOINT)
+        lrn.train(EPOCHS)
     else:
-        stl = Stylizer(args.model_path, args.output_path)
-        stl.stylize(args.input_path)
+        stl = Stylizer(MODEL_PATH, OUTPUT_PATH)
+        stl.stylize(INPUT_IMAGE)
 
 if __name__ == '__main__':
     main()

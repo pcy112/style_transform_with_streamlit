@@ -10,8 +10,6 @@ import streamlit as st
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-
-
 def stylizing(model_path, output_path, input_image):
     torch.cuda.empty_cache()
     with torch.no_grad():
