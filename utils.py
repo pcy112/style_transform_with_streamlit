@@ -7,6 +7,9 @@ def load_im(f, size=None):
     img = Image.open(f)
     if size is not None:
         img = img.resize((size, size), Image.ANTIALIAS)
+    w, h = img.size
+    resize_rate = 512 / max(w, h)
+    img = img.resize((int(w * resize_rate), int(h * resize_rate)))
     return img
 
 

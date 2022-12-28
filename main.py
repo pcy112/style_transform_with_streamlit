@@ -3,47 +3,25 @@ from PIL import Image
 import style
 import os
 from io import BytesIO
-import base64
-import torch
 
-# style image paths:
+# 경로 설정
 root_model = "./models"
 root_style = "./images/style"
 input_path = "./tmp/input.jpg"
 style_path = "./tmp/style.jpg"
 
+# 이미지를 바이트로 바꾸어 주는 함수
+# byte array: 1비트 단위의 값을 연속적으로 저장하는 시퀀스 자료형(1byte == 8bits)
+def image_to_byte(img):
+    buffer = BytesIO()
+    img.save(buffer, format='JPEG')
+    return buffer
 
-# download image function
-def get_image_download_link(img, file_name, style_name):
-    buffered = BytesIO()
-    img.save(buffered, format="JPEG")
-    img_str = base64.b64encode(buffered.getvalue()).decode()
-    href = f'<a style = "color:black" href="data:file/jpg;base64,{img_str}" download="{style_name+"_"+file_name+".jpg"}"><input type="button" value="Download"></a>'
-    return href
+# unsafe_allow_html: html 태그를 넣을 수 있음
+st.write("# Style transfer")
+st.write("### AI를 이용한 나만의 웹어플!")
 
-
-st.markdown("<h1 style='text-align: center; color: #508DC6;'>Style Transfer</h1>",
-            unsafe_allow_html=True)
-st.markdown("<h3 style='text-align: right; color: #508DC6;'>앱으로 보는 ai</h3>",
-            unsafe_allow_html=True)
-
-
-main_bg = "./images/pyto.png"
-main_bg_ext = "jpg"
-
-st.markdown(
-    f"""
-    <style>
-    .reportview-container {{
-        background: url(data:image/{main_bg_ext};base64,{base64.b64encode(open(main_bg, "rb").read()).decode()})
-    }}
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-
-# creating a side bar for picking the style of image
+# 사이드 바 만들기
 models = os.listdir(root_model)
 style_name = st.sidebar.selectbox(
     'Select Style',
@@ -55,48 +33,49 @@ else:
     path_style = None
 
 
-# Upload image functionality
+# 스타일을 바꿀 사진 업로드
 img = None
 uploaded_file = st.file_uploader(
-    "Choose an image...", type=["jpg", "jpeg", "png"], key = 'img')
+    "이미지를 골라주세요", type=["jpg", "jpeg"], key = 'img')
 
 show_file = st.empty()
 
-# checking if user has uploaded any file
-if not uploaded_file:
-    show_file.info("Please Upload an Image")
-else:
+# 파일이 업로드 됐는지 확인
+if uploaded_file:
+    # 업로드한 이미지 열기
     img = Image.open(uploaded_file)
     img.save(input_path, "JPEG")
-    # check required here if file is an image file
-    st.image(img, caption='Uploaded Image.', use_column_width=True)
+    
+    # 업로드한 이미지 띄워주기
+    st.image(img, caption='내가 올린 이미지', use_column_width=True)
+    
+    # 이미 학습된 스타일을 선택하면 스타일 이미지 띄우기
     if path_style != None:
-        st.image(path_style, caption='Style Image', use_column_width=True)
-        img_size = st.select_slider(
-                    'Select a image size',
-                    options=[8, 16, 32, 64, 128, 256, 512])
-        st.write('이미지 사이즈가 크면 결과는 좋아지지만 크기가 너무 크면 결과가 나오지 않을 수 있습니다.')
+        st.image(path_style, caption='스타일을 입힐 이미지', use_column_width=True)
+    # 커스텀을 선택하면 스타일 이미지를 업로드
     else:
         img2 = None
         uploaded_st_file = st.file_uploader(
-            "Choose a style...", type=["jpg", "jpeg", "png"], key = 'style')
+            "입히고 싶은 이미지를 골라주세요.", type=["jpg", "jpeg"], key = 'style')
         
-        if not uploaded_st_file:
-            show_file.info("Please Upload an Image")
-        else:
+        # 스타일 이미지가 업로드 됐는지 확인
+        if uploaded_st_file:
             img2 = Image.open(uploaded_st_file)
             img2.save(style_path, "JPEG")
-            # check required here if file is an image file
-            st.image(img2, caption='Uploaded Style Image.', use_column_width=True)
+            st.image(img2, caption='내가 올린 스타일 이미지', use_column_width=True)
             
+            # 학습할 때 사용할 이미지들의 크기 선택
             img_size = st.select_slider(
-                    'Select a image size',
+                    '이미지 사이즈를 골라주세요.',
                     options=[8, 16, 32, 64, 128, 256, 512])
-            st.write('이미지 사이즈가 크면 결과는 좋아지지만 학습이 오래 걸리거나 학습이 되지 않을 수 있습니다.')
+            st.write('이미지 사이즈가 크면 결과는 좋아질 수 있지만 학습이 오래 걸리거나 학습이 되지 않을 수 있습니다.')
+            # 학습 횟수 선택
             epoch = st.select_slider(
-                    'Input epoch',
+                    '학습 횟수를 골라주세요',
                     options=[1, 2, 3, 4, 5])
             st.write('학습 횟수가 늘어나면 결과는 좋아질 수도 있지만 그만큼 학습이 오래 걸립니다.')
+            
+            
 extensions = [".png", ".jpeg", ".jpg"]
 
 if uploaded_file is not None and any(extension in uploaded_file.name for extension in extensions):
@@ -113,22 +92,26 @@ if uploaded_file is not None and any(extension in uploaded_file.name for extensi
     stylize_button = st.button("Stylize")
     
     if path_style == None:
-          st.warning("새로운 스타일을 학습할 때는 시간이 오래 걸리며, 기기에 발열이 있을 수 있습니다.")
+        st.warning("Streamlit 배포 환경에서는 학습하는 것을 권장하지 않습니다(약 10시간 이상 필요). PC에서 local로 진행해 주시기 바랍니다.")
           
     if stylize_button:
         try:
             if path_style == None:
+                # 새로운 모델 학습하기
                 img2 = img2.convert('RGB')
-                #with st.spinner("학습 중..."):
                 model_path = style.train(style_path, img_size, epoch)
+            # 학습된 모델로 새로운 이미지 만들기
             stylized = style.stylizing(model_path, root_output, input_path)
-            # displaying the output image
-            st.write("### Output Image")
-            # image = Image.open(output_image)
-            st.image(stylized, width=400, use_column_width=True)
-            st.markdown(get_image_download_link(
-                stylized, name_file[0], style_name), unsafe_allow_html=True)
-        except Exception as e:
             
-            st.error("이미지가 너무 크거나 예기치 못한 문제가 발생하였습니다.\n이미지 크기를 줄이고 다시 시도해 주세요")
+            # 결과 이미지 출력
+            st.write("### Output Image")
+            st.image(stylized, width=400, use_column_width=True)
+            # 다운로드 버튼을 눌러 만들어진 이미지 내려받기
+            st.download_button(
+                label="Download Image",
+                data=image_to_byte(stylized),
+                file_name=f"{style_name}_{name_file[0]}.jpg"
+            )
+            
+        except Exception as e:
             st.write(e)

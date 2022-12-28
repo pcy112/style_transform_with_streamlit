@@ -25,9 +25,3 @@ def train(style_image, im_size, epochs):
     torch.cuda.empty_cache()
     model_path = train_learner(style_image, im_size, epochs)
     return model_path
-
-def main():
-    pass
-
-if __name__ == "__main__":
-    main()
