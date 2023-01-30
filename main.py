@@ -18,12 +18,12 @@ def image_to_byte(img):
     return buffer
 
 # 제목
-st.markdown('<p style="font-family:Courier; color:#FFA500; font-size: 40px;">양식 바꾸기</p>', unsafe_allow_html=True)
-st.markdown('<p style="font-family:Courier; color:#FF8C00; font-size: 24px;">인공지능을 이용한 나만의 편리한 인터넷!</p>', unsafe_allow_html=True)
+st.markdown('<p style="font-family:Courier; color:#FFA500; font-size: 40px;">스타일 입히기</p>', unsafe_allow_html=True)
+st.markdown('<p style="font-family:Courier; color:#FF8C00; font-size: 24px;">박채연</p>', unsafe_allow_html=True)
 # 사이드 바 만들기
 models = os.listdir(root_model)
 style_name = st.sidebar.selectbox(
-    '양식',
+    '스타일',
     ('custom' if i == len(models) else models[i].split('.')[0] for i in range(len(models) + 1))
 )
 if style_name != 'custom':
@@ -50,7 +50,7 @@ if uploaded_file:
     
     # 이미 학습된 스타일을 선택하면 스타일 이미지 띄우기
     if path_style != None:
-        st.image(path_style, caption='양식을 입힐 사진', use_column_width=True)
+        st.image(path_style, caption='스타일을 바꿀 사진', use_column_width=True)
     # 커스텀을 선택하면 스타일 이미지를 업로드
     else:
         img2 = None
@@ -86,7 +86,7 @@ if uploaded_file is not None and any(extension in uploaded_file.name for extensi
 
     root_output = "./images/sample"
 
-    stylize_button = st.button("양식 입히기")
+    stylize_button = st.button("스타일 바꾸기")
     
     if path_style == None:
         st.markdown('<p style="font-family:Courier; color:#B22222; font-size: 14px;">Streamlit 배포 환경에서는  학습하는 것을 권장하지 않습니다.(약 10시간 이상 필요).PC에서 local로 진행해 주시기 바랍니다.</p>', unsafe_allow_html=True)
@@ -105,7 +105,7 @@ if uploaded_file is not None and any(extension in uploaded_file.name for extensi
             st.image(stylized, width=400, use_column_width=True)
             # 다운로드 버튼을 눌러 만들어진 이미지 내려받기
             st.download_button(
-                label="사진을 내려받기",
+                label="사진 다운로드",
                 data=image_to_byte(stylized),
                 file_name=f"{style_name}_{name_file[0]}.jpg"
             )
